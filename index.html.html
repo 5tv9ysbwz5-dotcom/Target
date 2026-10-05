@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skjutdagbok">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Skjutdagbok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9edea; --panel:#fbfcfb; --ink:#18211d; --muted:#586660; --line:#c9d2cc;
+  --accent:#c9431d; --on-accent:#ffffff; --soft:#dfe6e1; --warn:#9a5b00;
+  --range:#d3dad5; --paper:#f3f2ea; --paper-ink:#1b1b18; --paper-line:#34383a;
+  --bull:#1c1f1d; --bull-ink:#f3f2ea; --bull-line:#8e9792;
+  --hit:#ff5a1f; --pend:#1f6fe0; --mpi:#13935a;
+  --f-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111613; --panel:#1a211e; --ink:#e7ece8; --muted:#9aa8a1; --line:#2d3833;
+    --accent:#ff7a4d; --on-accent:#1b0d06; --soft:#242d29; --warn:#ffb454;
+    --range:#0c100e; --paper:#dcdbd2; --paper-ink:#1b1b18; --paper-line:#34383a;
+    --bull:#151816; --bull-ink:#e9e8de; --bull-line:#7d8681;
+    --hit:#ff6a2e; --pend:#6fb0ff; --mpi:#3ddc97;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-inline:16px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1}
+.tabs{display:flex;background:var(--soft);border-radius:10px;padding:3px;gap:2px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:600 14px var(--f-body);padding:8px 14px;border-radius:8px;min-height:36px}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+button,select,input{font-family:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--pend);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.eyebrow{font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+details.settings summary{cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:600;list-style:none;min-height:28px}
+details.settings summary::-webkit-details-marker{display:none}
+details.settings summary span{color:var(--muted);font-weight:400;font-size:13px;text-align:right}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:12px}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.fields label.wide{grid-column:1/-1}
+.fields input[type=text],.fields select,.name input{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:10px;font-size:16px;min-width:0;width:100%}
+.fields input[type=range]{width:100%;min-height:32px}
+.check{flex-direction:row!important;align-items:center;gap:8px!important}
+.hint{grid-column:1/-1;font-size:12px;color:var(--muted);margin:0}
+.targetwrap{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--range)}
+#tgt{display:block;width:100%;aspect-ratio:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.viewseg{display:flex;gap:4px}
+.viewseg button{flex:1}
+.zoombar{display:flex;gap:6px;align-items:center;justify-content:space-between}
+.seg{display:flex;gap:4px}
+.seg button,.ghost{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 14px var(--f-mono);min-width:44px;min-height:40px;border-radius:8px;padding:0 10px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ghost{font-family:var(--f-body);font-weight:500}
+.cam{position:relative;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--line);aspect-ratio:4/3}
+.cam video{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+.cam canvas#ovl{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.cam.offscreen{position:fixed;left:-9999px;top:0;width:360px}
+.camidle{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center;padding:20px;color:#e7ece8;background:#111613}
+.camidle p{margin:0;font-size:13px;color:#9aa8a1;max-width:30ch}
+.meter{position:relative;height:12px;border-radius:6px;background:var(--soft);overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--mpi)}
+.meter b{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--accent)}
+.status{margin:0;font-size:14px;min-height:20px}
+.status.warn{color:var(--warn);font-weight:500}
+.nudge{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.nudge button{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 16px var(--f-mono);min-height:44px;border-radius:8px}
+#dbg{width:100%;max-width:240px;aspect-ratio:1;background:#000;image-rendering:pixelated;border-radius:8px}
+.readout{display:flex;flex-direction:column;gap:2px;min-height:44px}
+.readout .big{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.readout .sub{color:var(--muted);font-size:14px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.primary{grid-column:1/-1;border:0;background:var(--accent);color:var(--on-accent);font:700 18px var(--f-body);min-height:56px;border-radius:12px}
+.primary:disabled{opacity:.4}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 15px var(--f-body);min-height:48px;border-radius:10px;padding:0 12px}
+.btn.danger[data-armed="1"]{background:#b3261e;border-color:#b3261e;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.stat b{display:block;font-family:var(--f-display);font-weight:700;font-size:32px;line-height:1.05;font-variant-numeric:tabular-nums}
+.stat small{display:block;color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.stat i{display:block;font-style:normal;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 0}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.corr{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--line);font-weight:500}
+ol.shots,ul.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ol.shots li{display:grid;grid-template-columns:34px 56px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line);min-width:0}
+ol.shots li:first-child{border-top:0}
+.n{font-family:var(--f-mono);color:var(--muted)}
+.sc{font-family:var(--f-display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums}
+.pos{color:var(--muted);font-size:13px;min-width:0}
+.tag{display:inline-block;font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-left:6px;color:var(--muted)}
+.x{border:0;background:transparent;color:var(--muted);font-size:24px;min-width:44px;min-height:44px;border-radius:8px}
+ul.hist li{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid var(--line);padding:12px 0;min-width:0}
+ul.hist li:first-child{border-top:0}
+.hist h3{margin:0;font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.hist p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.hist .row{display:flex;gap:6px}
+.hist .btn{min-height:40px;font-size:14px}
+.badge{display:inline-block;font-family:var(--f-display);font-weight:700;letter-spacing:.1em;font-size:13px;text-transform:uppercase;background:var(--ink);color:var(--bg);border-radius:6px;padding:2px 8px}
+.example{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.name{display:flex;gap:8px}
+.empty{color:var(--muted);margin:0;padding:8px 0}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:10px;text-align:center;font-weight:500;max-width:520px;margin:0 auto;z-index:5}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Skjutdagbok</h1>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabShoot" aria-selected="true" aria-controls="viewShoot">Skjut</button>
+      <button role="tab" id="tabHist" aria-selected="false" aria-controls="viewHist">Pass</button>
+    </div>
+  </header>
+
+  <section id="viewShoot" role="tabpanel" aria-labelledby="tabShoot">
+    <details class="panel settings" id="settings">
+      <summary>Måltavla och gevär <span id="setSummary"></span></summary>
+      <div class="fields">
+        <label>Måltavla
+          <select id="fTarget">
+            <option value="luft">10 m luftgevär</option>
+            <option value="kula">50 m kulgevär</option>
+            <option value="g300">300 m gevär</option>
+            <option value="pist25">25 m pistoltavla, 300 m-gevär</option>
+            <option value="eget">Eget mål</option>
+          </select>
+        </label>
+        <label>Avstånd (m)<input id="fDist" type="text" inputmode="decimal"></label>
+        <label>Kaliber
+          <select id="fCalPre">
+            <option value="4.5">4,5 mm luftgevär</option>
+            <option value="5.6">.22 LR</option>
+            <option value="5.7">.223 Rem</option>
+            <option value="6.7">6,5×55</option>
+            <option value="7.8">.308 Win</option>
+            <option value="9">9×19</option>
+            <option value="other">Annan</option>
+          </select>
+        </label>
+        <label>Kulans diameter (mm)<input id="fCal" type="text" inputmode="decimal"></label>
+        <label>Klickvärde
+          <select id="fClick">
+            <option value="q">1/4 MOA</option>
+            <option value="h">1/2 MOA</option>
+            <option value="e">1/8 MOA</option>
+            <option value="m">0,1 mrad</option>
+            <option value="m5">0,05 mrad</option>
+          </select>
+        </label>
+        <label class="custom" hidden>Tians diameter (mm)<input id="fD10" type="text" inputmode="decimal"></label>
+        <label class="custom" hidden>Ringbredd (mm)<input id="fRw" type="text" inputmode="decimal"></label>
+        <p class="hint">Förvalen använder kulans verkliga diameter: .22 LR 5,6 mm, .223 Rem 5,7 mm, 6,5×55 6,7 mm, .308 Win 7,8 mm, 9×19 9,0 mm. Välj Annan för att skriva in egen diameter. Poängen räknas när kulans kant rör ringen. Ringbredd är avståndet från en ringkant till nästa, mätt från mitten.</p>
+      </div>
+    </details>
+
+    <details class="panel settings" id="autoSettings">
+      <summary>Automatik <span id="autoSummary"></span></summary>
+      <div class="fields">
+        <label class="wide">Läge
+          <select id="fMode">
+            <option value="audio">Ljud och bild: knallen startar sökningen</option>
+            <option value="image">Bara bild: nya hål upptäcks utan ljud</option>
+            <option value="manual">Bara kamera: jag trycker Sök hål nu</option>
+          </select>
+        </label>
+        <label class="wide">Ljudgräns <input id="fAud" type="range" min="3" max="95" value="30"></label>
+        <label class="wide">Bildkänslighet: lägre värde hittar svagare hål <input id="fImg" type="range" min="8" max="80" value="28"></label>
+        <label class="wide check"><input id="fDbg" type="checkbox"> Visa felsökning</label>
+        <p class="hint">Sätt ljudgränsen strax ovanför bakgrundsljudet. Den orangea markeringen i ljudmätaren visar gränsen.</p>
+      </div>
+    </details>
+
+    <div class="viewseg seg" id="viewSeg" role="group" aria-label="Vy">
+      <button type="button" id="vwT" aria-pressed="true" style="font-family:var(--f-body)">Tavla</button>
+      <button type="button" id="vwC" aria-pressed="false" style="font-family:var(--f-body)">Kamera</button>
+    </div>
+
+    <div id="blockTarget" style="display:flex;flex-direction:column;gap:12px">
+      <div class="targetwrap"><svg id="tgt" viewBox="-25 -25 50 50" role="img" aria-label="Måltavla. Tryck för att sätta ett skott."></svg></div>
+      <div class="zoombar">
+        <div class="seg" id="zoomSeg">
+          <button type="button" data-z="1" aria-pressed="true">1×</button>
+          <button type="button" data-z="2" aria-pressed="false">2×</button>
+          <button type="button" data-z="4" aria-pressed="false">4×</button>
+          <button type="button" data-z="8" aria-pressed="false">8×</button>
+        </div>
+        <button type="button" class="ghost" id="btnCenter">Till gruppen</button>
+      </div>
+    </div>
+
+      <div class="cam offscreen" id="camBox">
+        <video id="cam" playsinline muted autoplay></video>
+        <canvas id="ovl"></canvas>
+        <div class="camidle" id="camIdle">
+          <button type="button" class="btn" id="btnCamOn" style="background:var(--accent);color:var(--on-accent);border-color:var(--accent)">Starta kamera och mikrofon</button>
+          <p>Safari frågar om tillstånd. Sidan måste vara öppnad över https.</p>
+        </div>
+      </div>
+    <div id="blockCam" style="display:flex;flex-direction:column;gap:12px" hidden>
+      <div class="panel" id="camPanel" style="display:flex;flex-direction:column;gap:10px">
+        <p class="status" id="camStatus">Starta kameran och kalibrera mot tavlan.</p>
+        <div class="meter" aria-label="Ljudnivå"><i id="lvl"></i><b id="thrMark"></b></div>
+        <div class="actions">
+          <button type="button" class="btn" id="btnCal">Kalibrera</button>
+          <button type="button" class="btn" id="btnFind">Sök hål nu</button>
+          <button type="button" class="btn" id="btnCamOff" style="grid-column:1/-1">Stäng av kamera</button>
+        </div>
+        <div class="eyebrow">Finjustera ringarna</div>
+        <div class="nudge">
+          <button type="button" data-n="l" aria-label="Flytta vänster">◀</button>
+          <button type="button" data-n="r" aria-label="Flytta höger">▶</button>
+          <button type="button" data-n="u" aria-label="Flytta upp">▲</button>
+          <button type="button" data-n="d" aria-label="Flytta ned">▼</button>
+          <button type="button" data-n="m" aria-label="Mindre">−</button>
+          <button type="button" data-n="p" aria-label="Större">+</button>
+        </div>
+        <div id="dbgBox" hidden>
+          <div class="eyebrow">Felsökning</div>
+          <canvas id="dbg" width="384" height="384"></canvas>
+          <p class="status" id="dbgTxt"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel readout" aria-live="polite">
+      <span class="big" id="roBig">Tryck på tavlan</span>
+      <span class="sub" id="roSub">Flytta markören med ett nytt tryck, zooma och dra för att sikta noggrant.</span>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary" id="btnAdd" disabled>Registrera skott</button>
+      <button type="button" class="btn" id="btnMiss">Bom, utanför</button>
+      <button type="button" class="btn" id="btnUndo">Ångra senaste</button>
+    </div>
+
+    <div id="exampleNote" class="example" hidden><span class="badge">Exempel</span><span>Det här är ett exempelpass. Det rensas när du registrerar ditt första skott.</span></div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="panel" id="groupPanel">
+      <div class="eyebrow">Grupp och korrigering</div>
+      <dl class="kv" id="groupKv"></dl>
+      <p class="corr" id="corr"></p>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">Skott</div>
+      <ol class="shots" id="shotList"></ol>
+      <p class="empty" id="shotEmpty">Inga skott ännu.</p>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">Spara passet</div>
+      <div class="name" style="margin-top:8px">
+        <input id="fName" type="text" placeholder="Namn, till exempel Inskjutning 50 m" aria-label="Namn på passet" autocomplete="off">
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button type="button" class="btn" id="btnSave" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Spara pass</button>
+        <button type="button" class="btn danger" id="btnReset">Nollställ</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewHist" role="tabpanel" aria-labelledby="tabHist" hidden>
+    <div class="panel">
+      <div class="eyebrow">Sparade pass</div>
+      <ul class="hist" id="histList"></ul>
+      <p class="empty" id="histEmpty">Inga sparade pass ännu. Registrera skott och tryck Spara pass.</p>
+      <p style="margin:8px 0 0;font-size:12px;color:var(--muted)">Passen sparas bara i den här webbläsaren på den här enheten.</p>
+    </div>
+  </section>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+/*DETECT-START*/
+function toGray(rgba,n){
+  var g=new Uint8Array(n);
+  for(var i=0,j=0;i<n;i++,j+=4){ g[i]=(rgba[j]*77+rgba[j+1]*150+rgba[j+2]*29)>>8; }
+  return g;
+}
+function blur3(src,w,h){
+  var tmp=new Uint16Array(w*h), out=new Uint8Array(w*h), x, y;
+  for(y=0;y<h;y++){
+    var r=y*w;
+    for(x=0;x<w;x++){
+      tmp[r+x]=src[r+(x>0?x-1:x)]+src[r+x]+src[r+(x<w-1?x+1:x)];
+    }
+  }
+  for(y=0;y<h;y++){
+    var y0=(y>0?y-1:y)*w, y1=y*w, y2=(y<h-1?y+1:y)*w;
+    for(x=0;x<w;x++){ out[y1+x]=((tmp[y0+x]+tmp[y1+x]+tmp[y2+x])/9)|0; }
+  }
+  return out;
+}
+/* Jämför två gråskalebilder (före, efter). Tar bort global ljusändring via medianen,
+   hittar sammanhängande förändrade områden och väljer det som liknar ett skotthål. */
+function diffBlob(a,b,w,h,thr,minA,maxA){
+  var n=w*h, hist=new Int32Array(511), diff=new Int16Array(n), i, k;
+  for(i=0;i<n;i++){ var d0=b[i]-a[i]; diff[i]=d0; hist[d0+255]++; }
+  var acc=0, med=0;
+  for(k=0;k<511;k++){ acc+=hist[k]; if(acc>=n/2){ med=k-255; break; } }
+  var mask=new Uint8Array(n), changed=0;
+  for(i=0;i<n;i++){ var d=diff[i]-med; if(d>thr||d<-thr){ mask[i]=1; changed++; } }
+  var m2=new Uint8Array(n), x, y;
+  for(y=1;y<h-1;y++){
+    for(x=1;x<w-1;x++){
+      i=y*w+x;
+      if(mask[i]||mask[i-1]||mask[i+1]||mask[i-w]||mask[i+w]) m2[i]=1;
+    }
+  }
+  var vis=new Uint8Array(n), stack=new Int32Array(n), blobs=[], maxArea=0;
+  for(var s=0;s<n;s++){
+    if(!m2[s]||vis[s]) continue;
+    var sp=0; stack[sp++]=s; vis[s]=1;
+    var area=0,sx=0,sy=0,sd=0,x0=w,x1=0,y0=h,y1=0;
+    while(sp){
+      var p=stack[--sp], py=(p/w)|0, px=p-py*w;
+      area++; sx+=px; sy+=py; sd+=Math.abs(diff[p]-med);
+      if(px<x0)x0=px; if(px>x1)x1=px; if(py<y0)y0=py; if(py>y1)y1=py;
+      if(px>0&&m2[p-1]&&!vis[p-1]){ vis[p-1]=1; stack[sp++]=p-1; }
+      if(px<w-1&&m2[p+1]&&!vis[p+1]){ vis[p+1]=1; stack[sp++]=p+1; }
+      if(py>0&&m2[p-w]&&!vis[p-w]){ vis[p-w]=1; stack[sp++]=p-w; }
+      if(py<h-1&&m2[p+w]&&!vis[p+w]){ vis[p+w]=1; stack[sp++]=p+w; }
+    }
+    if(area>maxArea) maxArea=area;
+    blobs.push({area:area, x:sx/area, y:sy/area, meanDiff:sd/area, bw:x1-x0+1, bh:y1-y0+1});
+  }
+  var best=null;
+  for(i=0;i<blobs.length;i++){
+    var bl=blobs[i];
+    if(bl.area<minA||bl.area>maxA) continue;
+    var fill=bl.area/(bl.bw*bl.bh), asp=Math.max(bl.bw/bl.bh,bl.bh/bl.bw);
+    if(fill<0.35||asp>2.5) continue;
+    if(!best||bl.area>best.area) best=bl;
+  }
+  return {blob:best, maxArea:maxArea, changedFrac:changed/n, med:med, nBlobs:blobs.length, mask:m2};
+}
+/*DETECT-END*/
+</script>
+
+<script>
+(function(){
+  var $ = function(s){return document.querySelector(s)};
+  var esc = function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  var nf = function(n,d){d=d==null?1:d;return Number(n).toLocaleString('sv-SE',{minimumFractionDigits:d,maximumFractionDigits:d})};
+  var r2 = function(v){return Math.round(v*100)/100};
+  var ls = {
+    get:function(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+    set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  };
+
+  /* ---------- Målmått (mm). Ring n har radien r10 + (10-n)*ringbredd ---------- */
+  var TARGETS = {
+    luft:{name:'10 m luftgevär', r10:0.25, step:2.5, cal:4.5, dist:10, bull:4},
+    kula:{name:'50 m kulgevär', r10:5.2, step:8, cal:5.6, dist:50, bull:4},
+    g300:{name:'300 m gevär', r10:50, step:50, cal:6.7, dist:300, bull:5},
+    pist25:{name:'25 m pistoltavla, 300 m-gevär', r10:25, step:25, cal:6.7, dist:25, bull:7},
+    eget:{name:'Eget mål', r10:25, step:50, cal:6.7, dist:100, bull:4}
+  };
+  var MOA_MRAD = 0.29089;
+  var CLICKS = {q:{n:'1/4 MOA',mrad:0.25*MOA_MRAD}, h:{n:'1/2 MOA',mrad:0.5*MOA_MRAD}, e:{n:'1/8 MOA',mrad:0.125*MOA_MRAD}, m:{n:'0,1 mrad',mrad:0.1}, m5:{n:'0,05 mrad',mrad:0.05}};
+  var EXAMPLE = [{x:-3.1,y:2.4},{x:-2.2,y:1.1},{x:-3.8,y:1.7},{x:-1.9,y:2.9},{x:-2.8,y:0.6},{x:-3.4,y:2.0}];
+
+  var S = {target:'luft', dist:10, cal:4.5, d10:50, ringw:50, click:'q', mode:'audio', aud:30, img:28};
+  var shots = [];
+  var example = false;
+  var pending = null;
+  var view = {cx:0, cy:0, z:1};
+  var hist = [];
+
+  function geomOf(P){
+    var t = TARGETS[P.target] || TARGETS.luft;
+    var r10 = t.r10, step = t.step;
+    if(P.target==='eget'){ r10 = Math.max(P.d10,0.1)/2; step = Math.max(P.ringw,0.1); }
+    return {r10:r10, step:step, bull:t.bull, rad:function(n){return r10+(10-n)*step}, R1:r10+9*step};
+  }
+  function scoreOf(P,x,y){
+    var g = geomOf(P);
+    var de = Math.max(0, Math.hypot(x,y) - P.cal/2);
+    var v = de<=g.r10 ? 10+0.9*(1-de/g.r10) : 10-(de-g.r10)/g.step;
+    if(v<1) return {ring:0, dec:0};
+    v = Math.floor(v*10+1e-9)/10;
+    return {ring:Math.min(10,Math.floor(v+1e-9)), dec:v};
+  }
+  function statsOf(P,list){
+    var sc = list.map(function(s){return s.miss?{ring:0,dec:0}:scoreOf(P,s.x,s.y)});
+    var hits = list.filter(function(s){return !s.miss});
+    var tot=0, dec=0, tens=0;
+    sc.forEach(function(s){tot+=s.ring; dec+=s.dec; if(s.ring===10) tens++;});
+    var spread=null;
+    for(var i=0;i<hits.length;i++) for(var j=i+1;j<hits.length;j++){
+      var d=Math.hypot(hits[i].x-hits[j].x, hits[i].y-hits[j].y);
+      if(spread===null||d>spread) spread=d;
+    }
+    var mx=null,my=null;
+    if(hits.length){
+      mx=hits.reduce(function(a,s){return a+s.x},0)/hits.length;
+      my=hits.reduce(function(a,s){return a+s.y},0)/hits.length;
+    }
+    return {n:list.length, sc:sc, tot:tot, dec:dec, tens:tens, spread:spread, hits:hits.length, mx:mx, my:my};
+  }
+  function offs(x,y){
+    return nf(Math.abs(x))+' mm '+(x>=0?'höger':'vänster')+', '+nf(Math.abs(y))+' mm '+(y<=0?'upp':'ned');
+  }
+  function persistDraft(){ ls.set('sd2.draft',{S:S, shots:shots, example:example, name:$('#fName').value}); }
+
+  /* ---------- Virtuell tavla (SVG) ---------- */
+  var svg = $('#tgt');
+  function viewBox(){
+    var g = geomOf(S), half = g.R1*1.12, w = 2*half/view.z;
+    return {x:view.cx-w/2, y:view.cy-w/2, w:w, half:half};
+  }
+  function clampView(){
+    var g = geomOf(S), half = g.R1*1.12;
+    var lim = Math.max(0, half - half/view.z);
+    view.cx = Math.max(-lim, Math.min(lim, view.cx));
+    view.cy = Math.max(-lim, Math.min(lim, view.cy));
+  }
+  function mppNow(){ var vb = viewBox(); return vb.w/(svg.clientWidth||340); }
+
+  function drawTarget(){
+    clampView();
+    var g = geomOf(S), vb = viewBox(), mpp = vb.w/(svg.clientWidth||340);
+    svg.setAttribute('viewBox', vb.x+' '+vb.y+' '+vb.w+' '+vb.w);
+    var h = '', half = vb.half, n;
+    h += '<rect x="'+(-half)+'" y="'+(-half)+'" width="'+(2*half)+'" height="'+(2*half)+'" fill="var(--paper)"/>';
+    for(n=1;n<g.bull;n++) h += '<circle r="'+g.rad(n)+'" fill="none" stroke="var(--paper-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    h += '<circle r="'+g.rad(g.bull)+'" fill="var(--bull)" stroke="var(--paper-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    for(n=g.bull+1;n<=10;n++) h += '<circle r="'+g.rad(n)+'" fill="none" stroke="var(--bull-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    var fs = g.step*0.55;
+    if(fs/mpp >= 7){
+      for(n=1;n<=8;n++){
+        var rr = (g.rad(n)+g.rad(n+1))/2, fill = n>=g.bull?'var(--bull-ink)':'var(--paper-ink)';
+        [[0,-rr],[0,rr],[-rr,0],[rr,0]].forEach(function(p){
+          h += '<text x="'+p[0]+'" y="'+p[1]+'" font-size="'+fs+'" text-anchor="middle" dominant-baseline="central" font-family="IBM Plex Mono,monospace" font-weight="500" fill="'+fill+'">'+n+'</text>';
+        });
+      }
+    }
+    var dr = Math.max(S.cal/2, 4.5*mpp), tf = 11*mpp;
+    shots.forEach(function(s,i){
+      if(s.miss) return;
+      h += '<circle cx="'+s.x+'" cy="'+s.y+'" r="'+dr+'" fill="var(--hit)" fill-opacity=".85" stroke="#000" stroke-width="3" vector-effect="non-scaling-stroke"/>';
+      h += '<circle cx="'+s.x+'" cy="'+s.y+'" r="'+dr+'" fill="none" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke"/>';
+      h += '<text x="'+(s.x+dr*1.15)+'" y="'+(s.y-dr*1.15)+'" font-size="'+tf+'" font-family="IBM Plex Mono,monospace" font-weight="500" fill="#fff" stroke="#000" stroke-width="2.5" paint-order="stroke" vector-effect="non-scaling-stroke">'+(i+1)+'</text>';
+    });
+    var st = statsOf(S,shots);
+    if(st.hits>=2){
+      var k = 7*mpp;
+      h += '<path d="M'+(st.mx-k)+' '+(st.my-k)+' L'+(st.mx+k)+' '+(st.my+k)+' M'+(st.mx+k)+' '+(st.my-k)+' L'+(st.mx-k)+' '+(st.my+k)+'" fill="none" stroke="var(--mpi)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>';
+    }
+    if(pending){
+      var L = 16*mpp, c = dr*1.7;
+      h += '<g stroke="var(--pend)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke">'
+        +'<circle cx="'+pending.x+'" cy="'+pending.y+'" r="'+c+'" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>'
+        +'<path d="M'+(pending.x-L)+' '+pending.y+' H'+(pending.x-c)+' M'+(pending.x+c)+' '+pending.y+' H'+(pending.x+L)+' M'+pending.x+' '+(pending.y-L)+' V'+(pending.y-c)+' M'+pending.x+' '+(pending.y+c)+' V'+(pending.y+L)+'" vector-effect="non-scaling-stroke"/></g>'
+        +'<circle cx="'+pending.x+'" cy="'+pending.y+'" r="'+(1.5*mpp)+'" fill="var(--pend)"/>';
+    }
+    svg.innerHTML = h;
+  }
+  function toMm(cx,cy){
+    var rect = svg.getBoundingClientRect(), vb = viewBox();
+    return {x:r2(vb.x+(cx-rect.left)/rect.width*vb.w), y:r2(vb.y+(cy-rect.top)/rect.height*vb.w)};
+  }
+  function setPending(pt){
+    pending = pt; renderReadout(); drawTarget(); drawOverlay(); $('#btnAdd').disabled = !pending;
+  }
+  var ptr = null, wl = null;
+  function wake(){ if(!wl && navigator.wakeLock){ navigator.wakeLock.request('screen').then(function(l){wl=l}).catch(function(){}); } }
+  svg.addEventListener('pointerdown',function(e){
+    if(ptr) return;
+    wake();
+    ptr = {id:e.pointerId, x:e.clientX, y:e.clientY, cx:view.cx, cy:view.cy, moved:false};
+    try{svg.setPointerCapture(e.pointerId)}catch(err){}
+    if(view.z===1) setPending(toMm(e.clientX,e.clientY));
+  });
+  svg.addEventListener('pointermove',function(e){
+    if(!ptr||e.pointerId!==ptr.id) return;
+    if(view.z===1){ setPending(toMm(e.clientX,e.clientY)); return; }
+    var dx=e.clientX-ptr.x, dy=e.clientY-ptr.y;
+    if(!ptr.moved && Math.hypot(dx,dy)>8) ptr.moved=true;
+    if(ptr.moved){
+      var mpp = mppNow();
+      view.cx = ptr.cx-dx*mpp; view.cy = ptr.cy-dy*mpp;
+      drawTarget();
+    }
+  });
+  svg.addEventListener('pointerup',function(e){
+    if(!ptr||e.pointerId!==ptr.id) return;
+    var p = ptr; ptr = null;
+    if(view.z>1 && !p.moved) setPending(toMm(e.clientX,e.clientY));
+  });
+  svg.addEventListener('pointercancel',function(){ptr=null});
+  if(window.ResizeObserver) new ResizeObserver(function(){drawTarget()}).observe(svg);
+
+  function groupCenter(){ var st = statsOf(S,shots); return st.hits ? {x:st.mx,y:st.my} : null; }
+  function setZoom(z){
+    view.z = z;
+    if(z===1){ view.cx=0; view.cy=0; }
+    else { var c = pending || groupCenter() || {x:0,y:0}; view.cx=c.x; view.cy=c.y; }
+    document.querySelectorAll('#zoomSeg button').forEach(function(b){ b.setAttribute('aria-pressed', String(Number(b.dataset.z)===z)); });
+    drawTarget();
+  }
+  document.querySelectorAll('#zoomSeg button').forEach(function(b){ b.addEventListener('click',function(){setZoom(Number(b.dataset.z))}); });
+  $('#btnCenter').addEventListener('click',function(){
+    var c = groupCenter() || pending;
+    if(!c){ toast('Registrera ett skott först.'); return; }
+    if(view.z===1) setZoom(4);
+    view.cx=c.x; view.cy=c.y; drawTarget();
+  });
+  function resetZoomUi(){
+    view={cx:0,cy:0,z:1};
+    document.querySelectorAll('#zoomSeg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.z==='1'))});
+  }
+
+  /* ---------- Avläsning och statistik ---------- */
+  function renderReadout(){
+    if(!pending){
+      $('#roBig').textContent = 'Tryck på tavlan';
+      $('#roSub').textContent = 'Flytta markören med ett nytt tryck, zooma och dra för att sikta noggrant.';
+      return;
+    }
+    var sc = scoreOf(S,pending.x,pending.y);
+    $('#roBig').textContent = sc.ring===0 ? 'Utanför ringarna' : nf(sc.dec,1)+' poäng';
+    $('#roSub').textContent = offs(pending.x,pending.y)+' från mitten';
+  }
+  function statTile(label,big,sub){ return '<div class="stat"><small>'+label+'</small><b>'+big+'</b><i>'+sub+'</i></div>'; }
+  function renderStats(){
+    var st = statsOf(S,shots);
+    $('#stats').innerHTML =
+      statTile('Skott', st.n, st.n-st.hits>0 ? (st.n-st.hits)+' bom' : '&nbsp;') +
+      statTile('Poäng', st.tot, nf(st.dec,1)+' med decimal') +
+      statTile('Snitt', st.n?nf(st.dec/st.n,1):'–', st.tens+' tior');
+    var kv = '';
+    if(st.spread!==null){
+      kv += '<dt>Gruppstorlek</dt><dd>'+nf(st.spread)+' mm · '+nf(st.spread/S.dist/MOA_MRAD,2)+' MOA</dd>';
+    } else kv += '<dt>Gruppstorlek</dt><dd>Minst 2 träffar</dd>';
+    if(st.hits) kv += '<dt>Medelträffpunkt</dt><dd>'+offs(st.mx,st.my)+'</dd>';
+    $('#groupKv').innerHTML = kv;
+    var corr = $('#corr');
+    if(st.hits>=3){
+      var ck = CLICKS[S.click].mrad;
+      var cxn = Math.abs(st.mx)/S.dist/ck, cyn = Math.abs(st.my)/S.dist/ck, parts = [];
+      if(cxn>=0.5) parts.push(nf(cxn,1)+' klick '+(st.mx>0?'vänster':'höger'));
+      if(cyn>=0.5) parts.push(nf(cyn,1)+' klick '+(st.my<0?'ned':'upp'));
+      corr.textContent = parts.length ? 'Flytta träffbilden '+parts.join(' och ')+' ('+CLICKS[S.click].n+' per klick).' : 'Träffbilden sitter centrerad.';
+    } else corr.textContent = 'Korrigeringen visas efter tre träffar.';
+    $('#groupPanel').hidden = st.n===0;
+    var out = '';
+    for(var i=shots.length-1;i>=0;i--){
+      var s = shots[i], sc = st.sc[i];
+      out += '<li><span class="n">'+(i+1)+'</span><span class="sc">'+(s.miss?'Bom':nf(sc.dec,1))+'</span><span class="pos">'+(s.miss?'Utanför tavlan':esc(offs(s.x,s.y)))+(s.auto?'<span class="tag">auto</span>':'')+'</span><button type="button" class="x" data-del="'+i+'" aria-label="Ta bort skott '+(i+1)+'">×</button></li>';
+    }
+    $('#shotList').innerHTML = out;
+    $('#shotEmpty').hidden = shots.length>0;
+    $('#exampleNote').hidden = !example;
+  }
+  var MODES = {audio:'ljud och bild', image:'bara bild', manual:'manuell sökning'};
+  function renderSettings(){
+    var t = TARGETS[S.target];
+    $('#fTarget').value = S.target; $('#fDist').value = nf(S.dist,S.dist%1?1:0);
+    $('#fCal').value = nf(S.cal,1); $('#fClick').value = S.click;
+    var pre = 'other';
+    Array.prototype.forEach.call($('#fCalPre').options,function(o){ if(o.value!=='other' && Math.abs(Number(o.value)-S.cal)<0.005) pre=o.value; });
+    $('#fCalPre').value = pre;
+    $('#fD10').value = nf(S.d10,S.d10%1?1:0); $('#fRw').value = nf(S.ringw,S.ringw%1?1:0);
+    $('#fMode').value = S.mode; $('#fAud').value = S.aud; $('#fImg').value = S.img;
+    document.querySelectorAll('.custom').forEach(function(el){el.hidden = S.target!=='eget'});
+    $('#setSummary').textContent = t.name+' · '+nf(S.dist,S.dist%1?1:0)+' m · '+nf(S.cal,1)+' mm';
+    $('#autoSummary').textContent = MODES[S.mode];
+    $('#thrMark').style.left = S.aud+'%';
+  }
+  function renderAll(){ renderSettings(); renderReadout(); renderStats(); drawTarget(); drawOverlay(); $('#btnAdd').disabled = !pending; persistDraft(); }
+  function num(v,fallback){ var x = parseFloat(String(v).replace(',','.')); return isFinite(x)&&x>0 ? x : fallback; }
+  function clearExample(){ if(example){ shots=[]; example=false; } }
+
+  $('#fTarget').addEventListener('change',function(e){
+    clearExample();
+    S.target = e.target.value;
+    var t = TARGETS[S.target]; S.dist=t.dist; S.cal=t.cal;
+    pending=null; resetZoomUi(); resetCalib(); renderAll();
+  });
+  [['#fDist','dist'],['#fCal','cal'],['#fD10','d10'],['#fRw','ringw']].forEach(function(p){
+    $(p[0]).addEventListener('change',function(e){ S[p[1]] = num(e.target.value,S[p[1]]); if(p[1]!=='dist'&&p[1]!=='cal') resetCalib(); renderAll(); });
+  });
+  $('#fCalPre').addEventListener('change',function(e){
+    if(e.target.value==='other'){ $('#fCal').focus(); $('#fCal').select(); return; }
+    S.cal = Number(e.target.value); renderAll();
+  });
+  $('#fClick').addEventListener('change',function(e){ S.click=e.target.value; renderAll(); });
+  $('#fMode').addEventListener('change',function(e){
+    S.mode=e.target.value;
+    if(S.mode==='audio' && camOn && !hasAudio) setStatus('Mikrofonen är inte tillgänglig, så ljudläget fungerar inte. Välj Bara bild.', true);
+    armed=null; track.n=0; renderAll();
+  });
+  $('#fAud').addEventListener('input',function(e){ S.aud=Number(e.target.value); $('#thrMark').style.left=S.aud+'%'; persistDraft(); });
+  $('#fImg').addEventListener('input',function(e){ S.img=Number(e.target.value); persistDraft(); });
+  $('#fDbg').addEventListener('change',function(e){ $('#dbgBox').hidden = !e.target.checked; });
+  $('#fName').addEventListener('input',persistDraft);
+
+  /* ---------- Registrera ---------- */
+  function buzz(){ try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){} }
+  $('#btnAdd').addEventListener('click',function(){
+    if(!pending) return;
+    clearExample(); shots.push({x:pending.x,y:pending.y}); pending=null; buzz(); renderAll();
+  });
+  $('#btnMiss').addEventListener('click',function(){ clearExample(); shots.push({miss:true}); pending=null; buzz(); renderAll(); });
+  $('#btnUndo').addEventListener('click',function(){
+    if(!shots.length) return;
+    if(example){ shots=[]; example=false; } else shots.pop();
+    renderAll();
+  });
+  $('#shotList').addEventListener('click',function(e){
+    var b = e.target.closest('[data-del]'); if(!b) return;
+    shots.splice(Number(b.dataset.del),1);
+    if(example && !shots.length) example=false;
+    renderAll();
+  });
+  function twoStep(btn,armedLabel,action){
+    var label = btn.textContent, timer=null;
+    btn.addEventListener('click',function(){
+      if(btn.dataset.armed==='1'){ clearTimeout(timer); btn.dataset.armed=''; btn.textContent=label; action(btn); return; }
+      btn.dataset.armed='1'; btn.textContent=armedLabel;
+      timer=setTimeout(function(){btn.dataset.armed='';btn.textContent=label},3000);
+    });
+  }
+  function resetSession(){
+    shots=[]; example=false; pending=null; $('#fName').value=''; resetZoomUi(); baseline=null; renderAll();
+  }
+  twoStep($('#btnReset'),'Tryck igen för att rensa',resetSession);
+
+  function toast(msg){
+    var t = $('#toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(function(){t.hidden=true},2600);
+  }
+
+  /* ---------- Kamera, ljud och automatisk hålhittning ---------- */
+  var cam = $('#cam'), ovl = $('#ovl'), octx = ovl.getContext('2d');
+  var N = 384, gcv = document.createElement('canvas'); gcv.width = gcv.height = N;
+  var gctx = gcv.getContext('2d',{willReadFrequently:true});
+  var stream=null, actx=null, analyser=null, abuf=null, camOn=false, hasAudio=false;
+  var calib=null, calTmp=null, calStep=0;
+  var baseline=null, armed=null, track={x:0,y:0,n:0}, level=0, coolUntil=0, tickTimer=null;
+
+  function setStatus(msg,warn){ var el=$('#camStatus'); el.textContent=msg; el.className='status'+(warn?' warn':''); }
+  function roiMm(){ return 2*geomOf(S).R1*1.05; }
+  function kN(){ return N/roiMm(); }
+  function resetCalib(){ calib=null; calTmp=null; calStep=0; baseline=null; armed=null; track.n=0; drawOverlay(); if(camOn) setStatus('Målet ändrades. Kalibrera om.', true); }
+
+  function showView(which){
+    var cm = which==='cam';
+    $('#vwT').setAttribute('aria-pressed',String(!cm)); $('#vwC').setAttribute('aria-pressed',String(cm));
+    $('#blockTarget').hidden = cm; $('#blockCam').hidden = !cm;
+    $('#camBox').classList.toggle('offscreen', !cm);
+    if(cm) drawOverlay(); else drawTarget();
+  }
+  $('#vwT').addEventListener('click',function(){showView('target')});
+  $('#vwC').addEventListener('click',function(){showView('cam')});
+  $('#blockCam').hidden = true;
+
+  function startCam(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      setStatus('Kameran kräver att sidan öppnas över https i Safari.', true); return Promise.resolve();
+    }
+    wake();
+    var vid = {facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}};
+    var aud = {echoCancellation:false, noiseSuppression:false, autoGainControl:false};
+    return navigator.mediaDevices.getUserMedia({video:vid, audio:aud}).then(function(s){ hasAudio=true; return s; })
+      .catch(function(){ return navigator.mediaDevices.getUserMedia({video:vid}).then(function(s){ hasAudio=false; return s; }); })
+      .then(function(s){
+        stream = s; cam.srcObject = s;
+        return cam.play();
+      }).then(function(){
+        var ready = function(){
+          ovl.width = cam.videoWidth; ovl.height = cam.videoHeight;
+          $('#camBox').style.aspectRatio = cam.videoWidth+' / '+cam.videoHeight;
+          drawOverlay();
+        };
+        if(cam.videoWidth) ready(); else cam.addEventListener('loadedmetadata',ready,{once:true});
+        camOn = true; $('#camIdle').hidden = true;
+        if(hasAudio){
+          try{
+            var AC = window.AudioContext || window.webkitAudioContext;
+            actx = new AC();
+            if(actx.state==='suspended') actx.resume();
+            var src = actx.createMediaStreamSource(stream);
+            analyser = actx.createAnalyser(); analyser.fftSize = 2048; src.connect(analyser);
+            abuf = new Float32Array(analyser.fftSize);
+          }catch(e){ hasAudio=false; analyser=null; }
+        }
+        if(!hasAudio && S.mode==='audio'){ S.mode='image'; renderAll(); setStatus('Mikrofonen gick inte att använda. Bytte till Bara bild. Kalibrera mot tavlan.', true); }
+        else setStatus('Rikta kameran rakt mot tavlan och tryck Kalibrera.');
+        clearInterval(tickTimer); tickTimer = setInterval(tick,200);
+        requestAnimationFrame(audioLoop);
+      }).catch(function(e){
+        var m = e && e.name==='NotAllowedError' ? 'Tillstånd till kameran nekades. Tillåt kameran för sidan i Safari och försök igen.' : 'Kunde inte starta kameran ('+(e&&e.name?e.name:'okänt fel')+').';
+        setStatus(m,true); camOn=false; $('#camIdle').hidden=false;
+      });
+  }
+  function stopCam(){
+    camOn=false; clearInterval(tickTimer);
+    if(stream) stream.getTracks().forEach(function(t){t.stop()});
+    if(actx){ try{actx.close()}catch(e){} }
+    stream=null; actx=null; analyser=null; cam.srcObject=null;
+    baseline=null; armed=null; $('#camIdle').hidden=false; $('#lvl').style.width='0';
+    setStatus('Kameran är avstängd.');
+  }
+  $('#btnCamOn').addEventListener('click',startCam);
+  $('#btnCamOff').addEventListener('click',stopCam);
+
+  $('#btnCal').addEventListener('click',function(){
+    if(!camOn){ setStatus('Starta kameran först.', true); return; }
+    calStep=1; calTmp=null; calib=null; baseline=null; armed=null;
+    setStatus('Steg 1 av 2: tryck på tavlans mitt (tian).'); drawOverlay();
+  });
+  $('#btnFind').addEventListener('click',function(){
+    if(!camOn||!calib){ setStatus('Starta kameran och kalibrera först.', true); return; }
+    var now=performance.now(); armed={from:now, until:now+3000}; track.n=0; setStatus('Söker nytt hål...');
+  });
+  document.querySelectorAll('.nudge button').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(!calib) return;
+      var d=b.dataset.n, step=Math.max(1,ovl.width/400);
+      if(d==='l') calib.cx-=step; if(d==='r') calib.cx+=step; if(d==='u') calib.cy-=step; if(d==='d') calib.cy+=step;
+      if(d==='m') calib.ppm*=0.995; if(d==='p') calib.ppm*=1.005;
+      baseline=null; drawOverlay();
+    });
+  });
+  ovl.addEventListener('pointerdown',function(e){
+    if(!camOn) return;
+    var rect=ovl.getBoundingClientRect();
+    var vx=(e.clientX-rect.left)/rect.width*ovl.width, vy=(e.clientY-rect.top)/rect.height*ovl.height;
+    if(calStep===1){
+      calTmp={cx:vx,cy:vy}; calStep=2; setStatus('Steg 2 av 2: tryck på yttersta ringens kant (ring 1).'); drawOverlay(); return;
+    }
+    if(calStep===2){
+      var d=Math.hypot(vx-calTmp.cx,vy-calTmp.cy);
+      if(d<ovl.width*0.03){ setStatus('Punkten ligger för nära mitten. Tryck på ring 1 längre ut.', true); return; }
+      calib={cx:calTmp.cx, cy:calTmp.cy, ppm:d/geomOf(S).R1}; calStep=0; calTmp=null; baseline=null;
+      var dpx=S.cal*kN();
+      if(dpx<3) setStatus('Kalibrerad, men hålet blir bara ca '+nf(dpx,1)+' px i analysbilden. Gå närmare eller zooma in på tavlan.', true);
+      else setStatus('Kalibrerad. Kontrollera att de gröna ringarna ligger på tavlans ringar och finjustera vid behov.');
+      drawOverlay(); return;
+    }
+    if(calib) setPending({x:r2((vx-calib.cx)/calib.ppm), y:r2((vy-calib.cy)/calib.ppm)});
+  });
+
+  function drawOverlay(){
+    if(!camOn||!ovl.width) return;
+    var c=octx, k=ovl.width/(ovl.clientWidth||ovl.width), n;
+    c.clearRect(0,0,ovl.width,ovl.height);
+    function cross(x,y,col){ c.strokeStyle=col; c.lineWidth=2*k; c.beginPath(); c.moveTo(x-14*k,y); c.lineTo(x+14*k,y); c.moveTo(x,y-14*k); c.lineTo(x,y+14*k); c.stroke(); }
+    if(calStep===2&&calTmp) cross(calTmp.cx,calTmp.cy,'#6fb0ff');
+    if(!calib) return;
+    var g=geomOf(S);
+    c.lineWidth=1.5*k; c.strokeStyle='rgba(120,255,170,.85)';
+    for(n=1;n<=10;n++){ c.beginPath(); c.arc(calib.cx,calib.cy,g.rad(n)*calib.ppm,0,6.2832); c.stroke(); }
+    var half=roiMm()*calib.ppm/2;
+    c.setLineDash([6*k,6*k]); c.strokeStyle='rgba(255,255,255,.35)'; c.strokeRect(calib.cx-half,calib.cy-half,half*2,half*2); c.setLineDash([]);
+    shots.forEach(function(s,i){
+      if(s.miss) return;
+      var x=calib.cx+s.x*calib.ppm, y=calib.cy+s.y*calib.ppm, r=Math.max(S.cal/2*calib.ppm,7*k);
+      c.beginPath(); c.arc(x,y,r,0,6.2832); c.fillStyle='rgba(255,90,31,.55)'; c.fill(); c.lineWidth=2*k; c.strokeStyle='#fff'; c.stroke();
+      c.font='600 '+(13*k)+'px sans-serif'; c.lineWidth=3*k; c.strokeStyle='#000'; c.fillStyle='#fff';
+      c.strokeText(String(i+1),x+r+2*k,y-r); c.fillText(String(i+1),x+r+2*k,y-r);
+    });
+    if(pending) cross(calib.cx+pending.x*calib.ppm, calib.cy+pending.y*calib.ppm, '#6fb0ff');
+  }
+  if(window.ResizeObserver) new ResizeObserver(function(){drawOverlay()}).observe(ovl);
+
+  function grabROI(){
+    if(!camOn||!calib||!cam.videoWidth) return null;
+    var roi=roiMm()*calib.ppm, vw=cam.videoWidth, vh=cam.videoHeight;
+    var sx=calib.cx-roi/2, sy=calib.cy-roi/2;
+    var x0=Math.max(0,sx), y0=Math.max(0,sy), x1=Math.min(vw,sx+roi), y1=Math.min(vh,sy+roi);
+    if(x1-x0<20||y1-y0<20) return null;
+    var k=N/roi;
+    gctx.fillStyle='#808080'; gctx.fillRect(0,0,N,N);
+    gctx.drawImage(cam,x0,y0,x1-x0,y1-y0,(x0-sx)*k,(y0-sy)*k,(x1-x0)*k,(y1-y0)*k);
+    return blur3(toGray(gctx.getImageData(0,0,N,N).data,N*N),N,N);
+  }
+
+  function registerAuto(b){
+    var kn=kN(), x=r2((b.x-N/2)/kn), y=r2((b.y-N/2)/kn);
+    clearExample(); shots.push({x:x,y:y,auto:true}); pending=null; buzz(); renderAll();
+    var sc=scoreOf(S,x,y);
+    setStatus('Skott '+shots.length+' registrerat: '+(sc.ring?nf(sc.dec,1)+' poäng':'utanför ringarna')+'. Fel plats? Tryck Ångra eller ta bort det i listan.');
+  }
+  function debugDraw(r,exp,dpx){
+    if(!$('#fDbg').checked) return;
+    var cv=$('#dbg'), cx=cv.getContext('2d'), id=cx.createImageData(N,N), i, v;
+    for(i=0;i<N*N;i++){ v=r.mask[i]?255:0; id.data[i*4]=v; id.data[i*4+1]=v; id.data[i*4+2]=v; id.data[i*4+3]=255; }
+    cx.putImageData(id,0,0);
+    if(r.blob){ cx.strokeStyle='#ff5a1f'; cx.lineWidth=2; cx.beginPath(); cx.arc(r.blob.x,r.blob.y,Math.max(8,dpx),0,6.2832); cx.stroke(); }
+    $('#dbgTxt').textContent='Ändrat '+(r.changedFrac*100).toFixed(2)+' % · största område '+r.maxArea+' px · förväntat hål ca '+Math.round(exp)+' px ('+nf(dpx,1)+' px i diameter) · kandidat: '+(r.blob?'ja':'nej');
+  }
+  function tick(){
+    if(!camOn||!calib||calStep) return;
+    var cur=grabROI(); if(!cur) return;
+    if(!baseline){ baseline=cur; return; }
+    var kn=kN(), dpx=S.cal*kn, exp=Math.PI*(dpx/2)*(dpx/2);
+    var minA=Math.max(8,exp*0.25), maxA=exp*9+60;
+    var r=diffBlob(baseline,cur,N,N,S.img,minA,maxA);
+    debugDraw(r,exp,dpx);
+    var now=performance.now();
+    if(armed && now>armed.until){
+      armed=null; track.n=0;
+      setStatus('Hörde ett skott men hittade inget nytt hål. Tryck Sök hål nu, eller sätt skottet för hand.', true);
+    }
+    var listening = S.mode==='image' || (armed && now>=armed.from);
+    if(r.changedFrac>0.25){ track.n=0; return; }
+    if(r.blob && listening){
+      var b=r.blob, d=Math.hypot(b.x-track.x,b.y-track.y);
+      if(track.n>0 && d<3) track.n++; else { track.n=1; track.x=b.x; track.y=b.y; }
+      if(track.n>=(S.mode==='image'?3:2)){ registerAuto(b); baseline=cur; armed=null; track.n=0; }
+      return;
+    }
+    track.n=0;
+    if(r.maxArea<exp*0.15 && !armed) baseline=cur;
+  }
+  function audioLoop(){
+    if(!camOn) return;
+    if(analyser){
+      analyser.getFloatTimeDomainData(abuf);
+      var p=0, i, v;
+      for(i=0;i<abuf.length;i++){ v=abuf[i]<0?-abuf[i]:abuf[i]; if(v>p) p=v; }
+      level=Math.max(p,level*0.93);
+      $('#lvl').style.width=Math.min(100,level*100)+'%';
+      var now=performance.now();
+      if(S.mode==='audio' && calib && !calStep && p>S.aud/100 && now>coolUntil){
+        coolUntil=now+1500;
+        var wait=Math.min(1500,500+S.dist*4);
+        armed={from:now+wait, until:now+wait+4000}; track.n=0;
+        setStatus('Skott hört, söker nytt hål...');
+      }
+    }
+    requestAnimationFrame(audioLoop);
+  }
+
+  /* ---------- Pass: spara, öppna, radera ---------- */
+  $('#btnSave').addEventListener('click',function(){
+    if(!shots.length || example){ toast('Registrera minst ett skott först.'); return; }
+    var rec = {id:'l'+Date.now(), name:$('#fName').value.trim(), ts:Date.now(), target:S.target, dist:S.dist, cal:S.cal, d10:S.d10, ringw:S.ringw,
+      shots:shots.map(function(s){return s.miss?{miss:true}:{x:s.x,y:s.y,auto:s.auto?true:undefined}})};
+    hist.unshift(rec); ls.set('sd2.hist',hist); renderHist();
+    toast('Passet är sparat under Pass.'); resetSession();
+  });
+  function renderHist(){
+    var out = '';
+    hist.forEach(function(p){
+      var P = {target:p.target,dist:p.dist,cal:p.cal,d10:p.d10||50,ringw:p.ringw||50};
+      var st = statsOf(P,p.shots||[]);
+      var t = TARGETS[p.target] || TARGETS.luft;
+      var when = new Date(p.ts).toLocaleString('sv-SE',{dateStyle:'medium',timeStyle:'short'});
+      var title = p.name ? esc(p.name) : esc(t.name+' · '+nf(p.dist,p.dist%1?1:0)+' m');
+      var sub = esc(when)+' · '+st.n+' skott · '+st.tot+' p ('+nf(st.dec,1)+')'+(st.spread!==null?' · grupp '+nf(st.spread)+' mm':'');
+      out += '<li><div style="min-width:0"><h3>'+title+'</h3><p>'+sub+'</p></div><div class="row">'
+        +'<button type="button" class="btn" data-open="'+esc(p.id)+'">Öppna</button>'
+        +'<button type="button" class="btn" data-rm="'+esc(p.id)+'" aria-label="Radera pass">×</button></div></li>';
+    });
+    $('#histList').innerHTML = out;
+    $('#histEmpty').hidden = hist.length>0;
+  }
+  $('#histList').addEventListener('click',function(e){
+    var o = e.target.closest('[data-open]'), r = e.target.closest('[data-rm]');
+    if(o){
+      var p = hist.filter(function(x){return x.id===o.dataset.open})[0]; if(!p) return;
+      S.target=p.target; S.dist=p.dist; S.cal=p.cal; S.d10=p.d10||50; S.ringw=p.ringw||50;
+      shots=(p.shots||[]).map(function(s){return s.miss?{miss:true}:{x:s.x,y:s.y,auto:!!s.auto}});
+      example=false; pending=null; resetZoomUi(); resetCalib(); $('#fName').value=p.name||'';
+      showTab('shoot'); renderAll(); toast('Passet är öppnat.');
+    } else if(r){
+      if(r.dataset.armed!=='1'){
+        r.dataset.armed='1'; r.textContent='Radera?'; r.className='btn danger';
+        setTimeout(function(){ if(r.isConnected){ r.dataset.armed=''; r.textContent='×'; r.className='btn'; } },3000); return;
+      }
+      var id = r.dataset.rm;
+      hist = hist.filter(function(x){return x.id!==id}); ls.set('sd2.hist',hist); renderHist();
+    }
+  });
+  function showTab(which){
+    var shoot = which==='shoot';
+    $('#viewShoot').hidden = !shoot; $('#viewHist').hidden = shoot;
+    $('#tabShoot').setAttribute('aria-selected',String(shoot)); $('#tabHist').setAttribute('aria-selected',String(!shoot));
+    if(shoot) drawTarget();
+  }
+  $('#tabShoot').addEventListener('click',function(){showTab('shoot')});
+  $('#tabHist').addEventListener('click',function(){showTab('hist')});
+
+  /* ---------- Start ---------- */
+  var d = ls.get('sd2.draft');
+  if(d && d.S){
+    Object.keys(S).forEach(function(k){ if(d.S[k]!=null) S[k]=d.S[k]; });
+    if(!TARGETS[S.target]) S.target='luft';
+    if(!MODES[S.mode]) S.mode='audio';
+    shots = Array.isArray(d.shots)?d.shots:[]; example=!!d.example; $('#fName').value = d.name||'';
+  } else { shots = EXAMPLE.slice(); example = true; }
+  hist = ls.get('sd2.hist')||[];
+  renderHist(); renderAll();
+})();
+</script>
+</body>
+</html>
